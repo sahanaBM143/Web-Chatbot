@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Employee Chatbot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* [Same styling as before — unchanged] */
+    #chatbot-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #007bff;
+      color: #fff;
+      border: none;
+      padding: 14px;
+      font-size: 20px;
+      border-radius: 50%;
+      cursor: pointer;
+      z-index: 1000;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    #chatbot-box {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      width: 320px;
+      height: 440px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 999;
+      font-family: Arial, sans-serif;
+    }
+
+    #chat-content {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .message {
+      margin: 6px;
+      padding: 10px;
+      border-radius: 10px;
+      max-width: 75%;
+      font-size: 14px;
+    }
+
+    .user {
+      background: #d1e7dd;
+      align-self: flex-end;
+    }
+
+    .bot {
+      background: #f1f1f1;
+      align-self: flex-start;
+    }
+
+    #chat-input {
+      display: flex;
+      border-top: 1px solid #ccc;
+    }
+
+    #chat-input input {
+      flex: 1;
+      border: none;
+      padding: 12px;
+      font-size: 14px;
+    }
+
+    #chat-input button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 12px 16px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 500px) {
+      #chatbot-box {
+        width: 90%;
+        height: 80%;
+        bottom: 70px;
+        right: 5%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Floating Button -->
+<button id="chatbot-btn" onclick="toggleChat()">💬</button>
+
+<!-- Chat Window -->
+<div id="chatbot-box">
+  <div id="chat-content"></div>
+  <div id="chat-input">
+    <input id="chat-msg" placeholder="Type your question..." />
+    <button onclick="sendMsg()">Send</button>
+  </div>
+</div>
+
+<script>
+  const BACKEND_URL = "http://127.0.0.1:5000/chat";
+
+  function toggleChat() {
+    const box = document.getElementById("chatbot-box");
+    box.style.display = box.style.display === "none" ? "flex" : "none";
+  }
+
+  function addMsg(sender, text) {
+    const div = document.createElement("div");
+    div.className = `message ${sender}`;
+    div.innerText = text;
+    document.getElementById("chat-content").appendChild(div);
+    div.scrollIntoView({ behavior: "smooth" });
+  }
+
+  function sendMsg() {
+    const input = document.getElementById("chat-msg");
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    addMsg("user", msg);
+    input.value = "";
+
+    fetch(BACKEND_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: msg })
+    })
+    .then(res => {
+      if (!res.ok) throw new Error("Server error");
+      return res.json();
+    })
+    .then(data => {
+      addMsg("bot", data.reply);
+    })
+    .catch(err => {
+      console.error("❌ Chatbot fetch error:", err);
+      addMsg("bot", "❌ Could not connect to server.");
+    });
+  }
+
+  window.onload = () => {
+    document.getElementById("chatbot-box").style.display = "none";
+  };
+</script>
+
+</body>
+</html>
